@@ -62,7 +62,7 @@ def extract_tables(html):
     return tables
 
 
-def get_sheet(wb, sheetname):
+def get_sheet_by_name(wb, sheetname):
     if sheetname not in wb.sheetnames:
         if 'Sheet' in wb.sheetnames:
             sheet = wb['Sheet']
@@ -76,14 +76,21 @@ def get_sheet(wb, sheetname):
 def table_to_xlsx_sheet(raw_tables, sheet):
     '''
         This function will paste the table data into the sheet.
+
+        It creates a cursor object pointing to the x, y position of a single
+        cell at the sheet. The cursor will be moved as needed.
     '''
     cur = Cursor()
     for title, table in raw_tables:
         sheet.cell(column=cur.x, row=cur.y).value = title
 
         for tr in table.find_all('tr'):
-            cur.y += 1
             for Tcell in tr.find_all(['th', 'td']):
+
+                #  Checking for the rowspan and colspan of the html objects we
+                # can merge the corresponding cells of the sheet to fit the
+                # same format.
+
                 rowspan = 1
                 colspan = 1
                 if Tcell.has_attr('colspan'):
@@ -98,11 +105,14 @@ def table_to_xlsx_sheet(raw_tables, sheet):
                     sheet.merge_cells(start_row=cur.y, end_row=cur.y+rowspan-1,
                                          start_column=cur.x, end_column=cur.x+colspan-1)
 
+                # After the merging we add the contents
                 sheet.cell(column=cur.x, row=cur.y).value = Tcell.get_text()
 
                 cur.x += colspan
+
             cur.y += 1
             cur.x = 1
+
         cur.y += 1
 
     return sheet
@@ -122,7 +132,7 @@ def execute(directory, xlsx_file):
             f.close()
 
         tables = extract_tables(html)
-        table_to_xlsx_sheet(tables, get_sheet(wb, sheet_name))
+        table_to_xlsx_sheet(tables, get_sheet_by_name(wb, sheet_name))
 
     wb.save("{}{}".format(xlsx_file, '.xlsx'))
 

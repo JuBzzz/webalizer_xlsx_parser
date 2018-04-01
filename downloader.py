@@ -45,17 +45,16 @@ def destination_lookup(directory):
 
 
 def download_stats(address, directory):
-
+    '''
+        Before downloading each page, checks if it has not been downloaded and
+        if the date points to a date before the current month.
+    '''
     raw_html = fetch_html(address)
     destination = destination_lookup(directory)
     links = get_links(raw_html)
     today = datetime.date.today()
 
     for href in links:
-        '''
-        Before downloading each page, checks if it has not been downloaded and
-        if the date points to a date before the current month.
-        '''
         if (int(href[6:10]) < today.year or
             int(href[6:10]) == today.year and int(href[10:12]) != today.month):
             if not os.path.isfile('{}/{}'.format(destination, href)):
