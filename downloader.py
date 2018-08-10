@@ -48,7 +48,8 @@ def download_stats(address, directory):
         html files into the given directory.
     '''
     raw_html = fetch_html(address)
-    os.makedirs(directory)
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
     links = get_links(raw_html)
     today = datetime.date.today()
 
